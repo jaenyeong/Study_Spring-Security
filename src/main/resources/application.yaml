@@ -1,1 +1,7 @@
-
+## 인메모리 설정시 아래 방법으로 로그인 못함
+#spring:
+#  security:
+#    user:
+#      name: admin
+#      password: 123
+#      roles: ADMIN
