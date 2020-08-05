@@ -31,6 +31,12 @@ dependencies {
 
     // Spring Security Test
     testImplementation group: 'org.springframework.security', name: 'spring-security-test', version: '5.3.3.RELEASE'
+
+    // Thymeleaf extras SpringSecurity5
+    implementation group: 'org.thymeleaf.extras', name: 'thymeleaf-extras-springsecurity5'
+
+    // Spring Security Data
+    implementation group: 'org.springframework.security', name: 'spring-security-data', version: '5.3.3.RELEASE'
 }
 
 test {

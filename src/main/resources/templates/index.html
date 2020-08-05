@@ -1,10 +1,27 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8" />
     <title>Index page</title>
 </head>
 <body>
     <h1 th:text="${message}">Hello !!</h1>
+    <!-- 타임리프 스프링 시큐리티 확장팩 사용  -->
+<!--    <div th:if="${#authorization.expr('isAuthenticated()')}">-->
+<!--        <h2 th:text="${#authentication.name}">Name</h2>-->
+<!--        <a href="/logout" th:href="@{/logout}">Logout</a>-->
+<!--    </div>-->
+<!--    <div th:unless="${#authorization.expr('isAuthenticated()')}">-->
+<!--        <a href="/login" th:href="@{/login}">Login</a>-->
+<!--    </div>-->
+
+    <!-- sec 네임 스페이스 사용 -->
+    <div sec:authorize-expr="isAuthenticated()">
+        <h2 sec:authentication="name">Name</h2>
+        <a href="/logout" th:href="@{/logout}">Logout</a>
+    </div>
+    <div sec:authorize-expr="!isAuthenticated()">
+        <a href="/login" th:href="@{/login}">Login</a>
+    </div>
 </body>
 </html>

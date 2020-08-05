@@ -1,7 +1,10 @@
 package com.jaenyeong.spring_security.form;
 
+import com.jaenyeong.spring_security.account.Account;
 import com.jaenyeong.spring_security.account.AccountRepository;
+import com.jaenyeong.spring_security.common.CurrentUser;
 import com.jaenyeong.spring_security.common.SecurityLogger;
+import com.jaenyeong.spring_security.springdata.BookRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -20,12 +23,33 @@ public class SampleController {
 	@Autowired
 	AccountRepository accountRepository;
 
+	@Autowired
+	BookRepository bookRepository;
+
+//	@GetMapping("/")
+//	public String index(Model model, Principal principal) {
+//		if (principal == null) {
+//			model.addAttribute("message", "Hello Spring Security");
+//		} else {
+//			model.addAttribute("message", "Hello ! " + principal.getName());
+//		}
+//
+//		return "index";
+//	}
+
 	@GetMapping("/")
-	public String index(Model model, Principal principal) {
-		if (principal == null) {
+//	public String index(Model model, @AuthenticationPrincipal UserAccount userAccount) {
+//	public String index(Model model, @AuthenticationPrincipal Account userAccount) {
+//	public String index(Model model,
+//	                    @AuthenticationPrincipal(expression = "#this == 'anonymousUser' ? null : account") Account userAccount) {
+	// 위 애노테이션을 커스터마이징 하여 태깅
+	public String index(Model model, @CurrentUser Account userAccount) {
+		if (userAccount == null) {
 			model.addAttribute("message", "Hello Spring Security");
 		} else {
-			model.addAttribute("message", "Hello ! " + principal.getName());
+			// UserAccount 경우
+//			userAccount.getAccount().getUsername();
+			model.addAttribute("message", "Hello ! " + userAccount.getUsername());
 		}
 
 		return "index";
@@ -56,6 +80,7 @@ public class SampleController {
 	@GetMapping("/user")
 	public String user(Model model, Principal principal) {
 		model.addAttribute("message", "Hello User : " + principal.getName());
+		model.addAttribute("books", bookRepository.findCurrentUserBooks());
 		return "user";
 	}
 

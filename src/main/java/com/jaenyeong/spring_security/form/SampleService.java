@@ -5,6 +5,7 @@ package com.jaenyeong.spring_security.form;
 
 import com.jaenyeong.spring_security.common.SecurityLogger;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,6 +17,13 @@ import java.util.Collection;
 @Service
 public class SampleService {
 
+	// @Secured, @RolesAllowed 애노테이션은 해당 메서드를 호출하기 전에 권한 검사
+	@Secured("ROLE_USER")
+//	@Secured({"ROLE_USER", "ROLE_ADMIN"}) // 권한 계층을 별도로 설정하지 않고 모두 허용하여 인가 가능
+//	@RolesAllowed("ROLE_USER")
+//	@PreAuthorize("hasRole(USER)")
+	// 메서드 실행 이후에 인가 확인
+//	@PostAuthorize("isAuthenticated() and (( returnObject.name == principal.name ) or hasRole('ROLE_ADMIN'))")
 	public void dashboard() {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 

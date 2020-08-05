@@ -977,20 +977,20 @@ https://www.inflearn.com/course/%EB%B0%B1%EA%B8%B0%EC%84%A0-%EC%8A%A4%ED%94%84%E
 * 세션 변조 설정
   * SecurityConfig 파일 설정
    * ```
-    http.sessionManagement()
-            // 세션 생성 전략 설정
-    //		.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) // 기본
-            .sessionFixation()
-            .changeSessionId()
-            // 로그 아웃 등 유효하지 않은 세션 경우 설정
-            .invalidSessionUrl("/login")
-            // 세션 개수 제한 (기존 세션 로그아웃)
-            .maximumSessions(1)
-            // 세션 만료시
-            .expiredUrl("/login")
-            // 기존 세션을 지키고 새로운 세션 로그인 방지 (기본값 false)
-            // true 설정시 새로운 로그인 막음
-            .maxSessionsPreventsLogin(false);
+     http.sessionManagement()
+             // 세션 생성 전략 설정
+     //      .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) // 기본
+             .sessionFixation()
+             .changeSessionId()
+             // 로그 아웃 등 유효하지 않은 세션 경우 설정
+             .invalidSessionUrl("/login")
+             // 세션 개수 제한 (기존 세션 로그아웃)
+             .maximumSessions(1)
+             // 세션 만료시
+             .expiredUrl("/login")
+             // 기존 세션을 지키고 새로운 세션 로그인 방지 (기본값 false)
+             // true 설정시 새로운 로그인 막음
+             .maxSessionsPreventsLogin(false);
      ```
 
 #### [14] ExceptionTranslationFilter (인증/인가 예외 처리 필터)
@@ -1162,3 +1162,193 @@ https://www.inflearn.com/course/%EB%B0%B1%EA%B8%B0%EC%84%A0-%EC%8A%A4%ED%94%84%E
   15) FilterSecurityInterceptor (인가 처리 필터)
   16) RememberMeAuthenticationFilter (토큰 기반 인증 필터)
 -----
+
+### 기타
+
+#### 타임리프 스프링 시큐리티 확장팩
+* Thymeleaf extras SpringSecurity5 의존성 추가
+  * ```
+    implementation group: 'org.thymeleaf.extras', name: 'thymeleaf-extras-springsecurity5', version: '3.0.4.RELEASE'
+    ```
+
+* index html 파일 수정
+  * ```
+    <!DOCTYPE html>
+    <html lang="en" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Index page</title>
+    </head>
+    <body>
+        <h1 th:text="${message}">Hello !!</h1>
+        <div th:if="${#authorization.expr('isAuthenticated()')}">
+            <h2 th:text="${#authentication.name}">Name</h2>
+            <a href="/logout" th:href="@{/logout}">Logout</a>
+        </div>
+        <div th:unless="${#authorization.expr('isAuthenticated()')}">
+            <a href="/login" th:href="@{/login}">Login</a>
+        </div>
+    </body>
+    </html>
+    ```
+
+#### sec 네임스페이스
+* Sec 네임스페이스 등록
+  * ``` xmlns:sec="http://www.thymeleaf.org/extras/spring-security" ```
+
+* Sec 네임스페이스 사용
+  * index html 파일 수정
+    * ```
+      <!DOCTYPE html>
+      <html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+      <head>
+          <meta charset="UTF-8" />
+          <title>Index page</title>
+      </head>
+      <body>
+          <h1 th:text="${message}">Hello !!</h1>
+      
+          <div sec:authorize-expr="isAuthenticated()">
+              <h2 sec:authentication="name">Name</h2>
+              <a href="/logout" th:href="@{/logout}">Logout</a>
+          </div>
+          <div sec:authorize-expr="!isAuthenticated()">
+              <a href="/login" th:href="@{/login}">Login</a>
+          </div>
+      </body>
+      </html>
+      ```
+
+#### 메서드 시큐리티
+* @EnableGlobalMethodSecurity
+  * ```
+    @EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true, jsr250Enabled = true)
+    ```
+
+* @Secured, @RollAllowed
+  * 위 두 애노테이션은 해당 메서드를 호출하기 전에 권한 검사
+  * 스프링 EL을 사용하지 못함
+  * @Secured({"ROLE_USER", "ROLE_ADMIN"})
+    * 위와 같이 설정하여 권한 계층을 별도로 설정하지 않고 모두 허용하여 인가 가능
+
+* @PreAuthorize, @PostAuthorize
+  * @PreAuthorize 애노테이션은 해당 메서드 호출하기 전 권한 검사
+  * @PostAuthorize 애노테이션은 해당 메서드 실행 이후에 인가 확인
+  * 메서드 호출 이전 @있다
+
+* MethodSecurityConfig 파일 생성
+  * ```
+    @Configuration
+    @EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true, jsr250Enabled = true)
+    public class MethodSecurityConfig extends GlobalMethodSecurityConfiguration {
+    
+    	// 권한 계층 설정
+    	// 웹 시큐리티와 일반 시큐리티 설정은 다르게 적용되기 때문에 별도 설정
+    	@Override
+    	protected AccessDecisionManager accessDecisionManager() {
+    		RoleHierarchyImpl roleHierarchy = new RoleHierarchyImpl();
+    		roleHierarchy.setHierarchy("ROLE_ADMIN > ROLE_USER");
+    
+    		AffirmativeBased accessDecisionManager = (AffirmativeBased) super.accessDecisionManager();
+    		accessDecisionManager.getDecisionVoters().add(new RoleHierarchyVoter(roleHierarchy));
+    		return accessDecisionManager;
+    	}
+    }
+    ```
+
+#### @AuthenticationPrincipal (아규먼트 리졸버)
+* 웹 MVC 핸들러 아규먼트로 Principal 객체를 받을 수 있음
+
+* 그 동안 예제에서 넘겨 받은 Principal은 자바 스펙
+  * 스프링 시큐리티에서 제공해준 것이 아님
+
+* userService에서 제공하는 UserDetails 타입 객체가 Principal
+  * userService에서 제공하는 UserDetails 타입 객체를 수정하면  
+    컨트롤러에서 꺼내 사용하는 Principal(SecurityContextHolder 안에 있는 Principal)이 변경될 수 있음
+    * ```
+      SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+      ```
+
+* 예제 구현
+  * 커스텀 유저 클래스
+    * ```
+      public class UserAccount extends User {
+          private Account account;
+      
+          public UserAccount(Account account) {
+              super(account.getUsername(),
+                      account.getPassword(),
+                      List.of(new SimpleGrantedAuthority("ROLE_" + account.getRole())));
+              this.account = account;
+          }
+
+          public Account getAccount() {
+              return account;
+          }
+      }
+      ```
+  * AccountService 수정
+    * ```
+      @Override
+          public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+              Account account = accountRepository.findByUsername(username);
+              if (account == null) {
+                  throw new UsernameNotFoundException(username);
+              }
+      
+              // Account 도메인 자체를 반환하여 사용하려면
+      		  // Account가 시큐리티에 User 클래스를 상속하거나 UserDetails 인터페이스를 구현해야 함
+              return new UserAccount(account);
+          }
+      ```
+
+* @AuthenticationPrincipal 애노테이션 적용 예제
+  * [1]
+    * ```
+      @AuthenticationPrincipal UserAccount userAccount
+      ```
+    * UserDetailsService 구현체에서 리턴하는 객체를 매개변수로 받을 수 있음
+    * 그 안에 들어있는 Account객체를 getter를 통해 참조 가능
+  * [2]
+    * ```
+      @AuthenticationPrincipal(expression = "#this == 'anonymousUser' ? null : account") Account userAccount
+      ```
+    * 익명 Authentication인 경우 (“anonymousUser”)에는 null 아닌 경우에는 account 필드를 사용
+    * Account를 바로 참조 가능
+  * [3]
+    * ```
+      @CurrentUser Account account
+      ```
+    * @AP를 메타 애노테이션으로 사용하여 커스텀 애노테이션을 만들어 사용 가능
+
+* @CurrentUser
+  * ```
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.PARAMETER)
+    @AuthenticationPrincipal(expression = "#this == 'anonymousUser' ? null : account")
+    public @interface CurrentUser {
+    }
+    ```
+
+#### 스프링 데이터 연동
+* @Query 애노테이션에서 SpEL로 principal 참조할 수 있는 기능 제공
+
+* Spring Security Data 의존성 추가
+  * ```
+    implementation group: 'org.springframework.security', name: 'spring-security-data', version: '5.3.3.RELEASE'
+    ```
+
+* @Query에서 principal 사용
+  * ```
+    @Query("select b from Book b where b.author.id = ?#{principal.account.id}")
+    List<Book> findCurrentUserBooks();
+    ```
+
+* 타임리프 리스트 참조
+  * ```
+    <tr th:each="book : ${books}">
+        <td><span th:text="${book.title}"> Title </span></td>
+    </tr>
+    ```
+
+#### 정리
