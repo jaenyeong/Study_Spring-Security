@@ -21,7 +21,6 @@ dependencies {
     }
 
     // Spring Security
-
     implementation group: 'org.springframework.boot', name: 'spring-boot-starter-security'
 
     // Spring Data JPA

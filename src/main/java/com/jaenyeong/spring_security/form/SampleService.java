@@ -3,6 +3,8 @@ package com.jaenyeong.spring_security.form;
 //import com.jaenyeong.spring_security.account.Account;
 //import com.jaenyeong.spring_security.account.AccountContext;
 
+import com.jaenyeong.spring_security.common.SecurityLogger;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -36,5 +38,19 @@ public class SampleService {
 //		Account account = AccountContext.getAccount();
 //		System.out.println("===================================");
 //		System.out.println(account.getUsername());
+	}
+
+	// @Async 애노테이션 태깅시 특정 빈에 메서드 호출 시 별도 스레드를 생성하여 비동기적 호출
+	// 하지만 스레드가 동일하기 때문에 @Async 애노테이션을 태깅한다고 바로 비동기 처리가 되지 않음
+	// 비동기처리를 하려면 @EnableAsync 애노테이션을 태깅
+	@Async
+	public void asyncService() {
+		try {
+			SecurityLogger.log("Async service");
+			System.out.println("Async service is called");
+			Thread.sleep(3_000L);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }
